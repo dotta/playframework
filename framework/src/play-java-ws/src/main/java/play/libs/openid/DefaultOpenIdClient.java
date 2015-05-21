@@ -7,7 +7,6 @@ import play.core.Execution;
 import play.libs.F;
 import play.libs.Scala;
 import play.mvc.Http;
-import scala.collection.JavaConversions;
 import scala.runtime.AbstractFunction1;
 
 import javax.inject.Inject;
@@ -63,8 +62,10 @@ public class DefaultOpenIdClient implements OpenIdClient {
         if (axOptional == null) axOptional = new HashMap<String, String>();
         return F.Promise.wrap(client.redirectURL(openID,
                 callbackURL,
-                JavaConversions.mapAsScalaMap(axRequired).toSeq(),
-                JavaConversions.mapAsScalaMap(axOptional).toSeq(),
+                play.utils.Conversions.newSeq(
+                  scala.collection.JavaConverters.mapAsScalaMapConverter(axRequired).asScala()),
+                play.utils.Conversions.newSeq(
+                  scala.collection.JavaConverters.mapAsScalaMapConverter(axOptional).asScala()),
                 Scala.Option(realm)));
     }
 
@@ -77,7 +78,7 @@ public class DefaultOpenIdClient implements OpenIdClient {
                 new AbstractFunction1<play.api.libs.openid.UserInfo, UserInfo>() {
                     @Override
                     public UserInfo apply(play.api.libs.openid.UserInfo scalaUserInfo) {
-                        return new UserInfo(scalaUserInfo.id(), JavaConversions.mapAsJavaMap(scalaUserInfo.attributes()));
+                        return new UserInfo(scalaUserInfo.id(), scala.collection.JavaConverters.mapAsJavaMapConverter(scalaUserInfo.attributes()).asJava());
                     }
                 }, Execution.internalContext());
         return F.Promise.wrap(scalaPromise);

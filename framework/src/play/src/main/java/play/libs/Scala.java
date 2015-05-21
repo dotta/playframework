@@ -46,7 +46,7 @@ public class Scala {
      */
     public static <A,B> scala.collection.immutable.Map<A,B> asScala(Map<A,B> javaMap) {
         return play.utils.Conversions.newMap(
-                scala.collection.JavaConverters.mapAsScalaMapConverter(javaMap).asScala().toSeq()
+                scala.collection.JavaConverters.mapAsScalaMapConverter(javaMap).asScala()
                 );
     }
 
