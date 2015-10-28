@@ -3,6 +3,8 @@
  */
 package play.core.server;
 
+import java.net.InetSocketAddress;
+
 /**
  * A server that can be stopped.
  */
@@ -18,6 +20,6 @@ public interface ServerWithStop {
    *
    * @return The address of the server.
    */
-  public java.net.InetSocketAddress mainAddress(); 
+  public InetSocketAddress mainAddress(); 
 
 }

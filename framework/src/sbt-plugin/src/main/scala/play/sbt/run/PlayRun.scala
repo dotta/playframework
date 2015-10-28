@@ -71,7 +71,7 @@ object PlayRun {
       result.flatMap(_.toEither.right.toOption).orNull
     }
 
-    lazy val devModeServer = Reloader.startDevMode(
+    lazy val devModeServer: Reloader.PlayDevServer = Reloader.startDevMode(
       runHooks.value,
       (javaOptions in Runtime).value,
       dependencyClasspath.value.files,
@@ -116,7 +116,7 @@ object PlayRun {
           case Some(watched) =>
             // ~ run mode
             interaction doWithoutEcho {
-              twiddleRunMonitor(watched, state, devModeServer.buildLink, Some(WatchState.empty))
+              twiddleRunMonitor(watched, state, devModeServer, Some(WatchState.empty))
             }
           case None =>
             // run mode
@@ -132,7 +132,7 @@ object PlayRun {
    * Monitor changes in ~run mode.
    */
   @tailrec
-  private def twiddleRunMonitor(watched: Watched, state: State, reloader: BuildLink, ws: Option[WatchState] = None): Unit = {
+  private def twiddleRunMonitor(watched: Watched, state: State, devServer: Reloader.PlayDevServer, ws: Option[WatchState] = None): Unit = {
     val ContinuousState = AttributeKey[WatchState]("watch state", "Internal: tracks state for continuous execution.")
     def isEOF(c: Int): Boolean = c == 4
 
@@ -166,11 +166,13 @@ object PlayRun {
         }
       }
 
+      devServer.reload()
+
       // Avoid launching too much compilation
       Thread.sleep(Watched.PollDelayMillis)
 
       // Call back myself
-      twiddleRunMonitor(watched, newState, reloader, Some(newWatchState))
+      twiddleRunMonitor(watched, newState, devServer, Some(newWatchState))
     } else {
       ()
     }

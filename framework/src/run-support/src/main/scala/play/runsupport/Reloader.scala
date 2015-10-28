@@ -111,6 +111,8 @@ object Reloader {
    */
   trait PlayDevServer extends Closeable {
     val buildLink: BuildLink
+    /** Reloads the application.*/
+    def reload(): Unit
   }
 
   /**
@@ -216,14 +218,17 @@ object Reloader {
           factoryMethod.invoke(null).asInstanceOf[BuildDocHandler]
       }
 
-      val server = {
+      type Reloadable = play.core.server.ServerWithStop {
+        def reload(): Unit
+      }
+      val server: Reloadable = {
         val mainClass = applicationLoader.loadClass(mainClassName)
         if (httpPort.isDefined) {
           val mainDev = mainClass.getMethod("mainDevHttpMode", classOf[BuildLink], classOf[BuildDocHandler], classOf[Int], classOf[String])
-          mainDev.invoke(null, reloader, buildDocHandler, httpPort.get: java.lang.Integer, httpAddress).asInstanceOf[play.core.server.ServerWithStop]
+          mainDev.invoke(null, reloader, buildDocHandler, httpPort.get: java.lang.Integer, httpAddress).asInstanceOf[Reloadable]
         } else {
           val mainDev = mainClass.getMethod("mainDevOnlyHttpsMode", classOf[BuildLink], classOf[BuildDocHandler], classOf[Int], classOf[String])
-          mainDev.invoke(null, reloader, buildDocHandler, httpsPort.get: java.lang.Integer, httpAddress).asInstanceOf[play.core.server.ServerWithStop]
+          mainDev.invoke(null, reloader, buildDocHandler, httpsPort.get: java.lang.Integer, httpAddress).asInstanceOf[Reloadable]
         }
       }
 
@@ -231,9 +236,10 @@ object Reloader {
       runHooks.run(_.afterStarted(server.mainAddress))
 
       new PlayDevServer {
-        val buildLink = reloader
+        val buildLink: BuildLink = reloader
 
-        def close() = {
+        def reload(): Unit = server.reload()
+        def close(): Unit = {
           server.stop()
           maybeDocsJarFile.foreach(_.close())
           reloader.close()

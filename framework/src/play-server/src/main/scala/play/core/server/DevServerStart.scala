@@ -33,7 +33,7 @@ object DevServerStart {
     buildLink: BuildLink,
     buildDocHandler: BuildDocHandler,
     httpsPort: Int,
-    httpAddress: String): ServerWithStop = {
+    httpAddress: String): ReloadableServer = {
     mainDev(buildLink, buildDocHandler, None, Some(httpsPort), httpAddress)
   }
 
@@ -47,7 +47,7 @@ object DevServerStart {
     buildLink: BuildLink,
     buildDocHandler: BuildDocHandler,
     httpPort: Int,
-    httpAddress: String): ServerWithStop = {
+    httpAddress: String): ReloadableServer = {
     mainDev(buildLink, buildDocHandler, Some(httpPort), Option(System.getProperty("https.port")).map(Integer.parseInt(_)), httpAddress)
   }
 
@@ -56,7 +56,7 @@ object DevServerStart {
     buildDocHandler: BuildDocHandler,
     httpPort: Option[Int],
     httpsPort: Option[Int],
-    httpAddress: String): ServerWithStop = {
+    httpAddress: String): ReloadableServer = {
     val classLoader = getClass.getClassLoader
     Threads.withContextClassLoader(classLoader) {
       try {
@@ -100,7 +100,6 @@ object DevServerStart {
           override def current: Option[Application] = lastState.toOption
 
           def get: Try[Application] = {
-
             synchronized {
 
               // Let's load the application on another thread
@@ -118,11 +117,10 @@ object DevServerStart {
                 }
 
                 reloaded.flatMap { maybeClassLoader =>
-
                   val maybeApplication: Option[Try[Application]] = maybeClassLoader.map { projectClassloader =>
                     try {
-
                       if (lastState.isSuccess) {
+
                         println()
                         println(play.utils.Colors.magenta("--- (RELOAD) ---"))
                         println()
@@ -207,12 +205,14 @@ object DevServerStart {
         val serverContext = ServerProvider.Context(serverConfig, appProvider, actorSystem,
           ActorMaterializer()(actorSystem), actorSystemStopHook)
         val serverProvider = ServerProvider.fromConfiguration(classLoader, serverConfig.configuration)
-        serverProvider.createServer(serverContext)
+        val server = serverProvider.createServer(serverContext)
+        val reloadableServer = new ReloadableServer(server) {
+          def reload(): Unit = appProvider.get
+        }
+        reloadableServer
       } catch {
         case e: ExceptionInInitializerError => throw e.getCause
       }
-
     }
   }
-
 }
