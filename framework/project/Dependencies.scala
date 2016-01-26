@@ -5,6 +5,7 @@ import sbt._
 import buildinfo.BuildInfo
 
 object Dependencies {
+  val akkaVersion = "2.4.2-RC1"
 
   val specsVersion = "3.6.6"
   val specsBuild = Seq(
@@ -114,7 +115,7 @@ object Dependencies {
 
   def runtime(scalaVersion: String) =
     slf4j ++
-    Seq("akka-actor", "akka-slf4j").map("com.typesafe.akka" %% _ % "2.4.1") ++
+    Seq("akka-actor", "akka-slf4j").map("com.typesafe.akka" %% _ % akkaVersion) ++
     jacksons ++
     Seq(
       "org.scala-stm" %% "scala-stm" % "0.7",
@@ -150,7 +151,7 @@ object Dependencies {
   val nettyUtilsDependencies = slf4j
 
   val akkaHttp = Seq(
-    "com.typesafe.akka" %% "akka-http-core-experimental" % "2.0.2"
+    "com.typesafe.akka" %% "akka-http-core" % akkaVersion
   )
 
   def routesCompilerDependencies(scalaVersion: String) = Seq(
@@ -247,7 +248,7 @@ object Dependencies {
 
   val streamsDependencies = Seq(
     "org.reactivestreams" % "reactive-streams" % "1.0.0",
-    "com.typesafe.akka" %% "akka-stream-experimental" % "2.0.2",
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     scalaJava8Compat
   ) ++ specsBuild.map(_ % "test") ++ logback.map(_ % Test) ++ javaTestDeps
 

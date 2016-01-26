@@ -1,5 +1,6 @@
 package play.api.libs.streams
 
+import akka.Done
 import akka.stream.scaladsl._
 import akka.stream.stage._
 import akka.stream._
@@ -58,7 +59,7 @@ object AkkaStreams {
   def onlyFirstCanFinishMerge[T](inputPorts: Int) = GraphDSL.create[UniformFanInShape[T, T]]() { implicit builder =>
     import GraphDSL.Implicits._
 
-    val merge = builder.add(Merge[T](inputPorts, eagerClose = true))
+    val merge = builder.add(Merge[T](inputPorts, eagerComplete = true))
 
     val blockFinishes = (1 until inputPorts).map { i =>
       val blockFinish = builder.add(ignoreAfterFinish[T])
@@ -90,7 +91,7 @@ object AkkaStreams {
   /**
    * A flow that will ignore downstream cancellation, and instead will continue receiving and ignoring the stream.
    */
-  def ignoreAfterCancellation[T]: Flow[T, T, Future[Unit]] = {
+  def ignoreAfterCancellation[T]: Flow[T, T, Future[Done]] = {
     Flow.fromGraph(GraphDSL.create(Sink.ignore) { implicit builder =>
       ignore =>
         import GraphDSL.Implicits._

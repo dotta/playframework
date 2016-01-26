@@ -5,6 +5,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import akka.stream.javadsl.AsPublisher;
 import play.api.libs.streams.Accumulator$;
 import scala.compat.java8.FutureConverters;
 import scala.concurrent.Future;
@@ -134,7 +135,7 @@ public abstract class Accumulator<E, A> {
     public static <E> Accumulator<E, Source<E, ?>> source() {
         // If Akka streams ever provides Sink.source(), we should use that instead.
         // https://github.com/akka/akka/issues/18406
-        return new SinkAccumulator<>(Sink.<E>asPublisher(false).mapMaterializedValue(publisher ->
+        return new SinkAccumulator<>(Sink.<E>asPublisher(AsPublisher.WITHOUT_FANOUT).mapMaterializedValue(publisher ->
                         CompletableFuture.completedFuture(Source.fromPublisher(publisher))
         ));
     }

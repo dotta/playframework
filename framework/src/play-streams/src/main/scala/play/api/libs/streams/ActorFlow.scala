@@ -1,5 +1,6 @@
 package play.api.libs.streams
 
+import akka.NotUsed
 import akka.actor._
 import akka.stream.{ Materializer, OverflowStrategy }
 import akka.stream.scaladsl.{ Sink, Keep, Source, Flow }
@@ -26,7 +27,7 @@ object ActorFlow {
    * @param bufferSize The maximum number of elements to buffer.
    * @param overflowStrategy The strategy for how to handle a buffer overflow.
    */
-  def actorRef[In, Out](props: ActorRef => Props, bufferSize: Int = 16, overflowStrategy: OverflowStrategy = OverflowStrategy.dropNew)(implicit factory: ActorRefFactory, mat: Materializer): Flow[In, Out, Unit] = {
+  def actorRef[In, Out](props: ActorRef => Props, bufferSize: Int = 16, overflowStrategy: OverflowStrategy = OverflowStrategy.dropNew)(implicit factory: ActorRefFactory, mat: Materializer): Flow[In, Out, NotUsed] = {
 
     val (outActor, publisher) = Source.actorRef[Out](bufferSize, overflowStrategy)
       .toMat(Sink.asPublisher(false))(Keep.both).run()
